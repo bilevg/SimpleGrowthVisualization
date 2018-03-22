@@ -33,8 +33,8 @@ themeops <- theme(axis.line=element_blank(),
                   panel.grid=element_blank(),
                   legend.position="bottom",
                   legend.key = element_rect(colour = 'black',  size = .8, linetype='solid'),
-                  text=element_text(size=12),
-                  plot.title=element_text(hjust=.5, size=14))
+                  text=element_text(size=10),
+                  plot.title=element_text(hjust=.5, size=12))
 
 
 ##
@@ -67,7 +67,7 @@ for (year in 1990:2016){
                              label.position = "bottom",
                              title="GDP % Change")) +
         themeops + ggtitle('Growth')
-    ggsave(filename = paste('Growth', year, sep='_'), device = 'png', width = 4, height = 3, dpi = 300)
+    ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 4, height = 3, dpi = 300)
 }
 ##
 
