@@ -7,6 +7,9 @@ library(tripack)
 library(maptools)
 library(wbstats)
 library(ggplot2)
+library(gganimate)
+library(gpclib)
+gpclibPermit()
 options(digits=8, max.print=1000, scipen=13)
 
 ## world bank indicator for gdp percent change annual
@@ -22,32 +25,53 @@ wb.df = wb.df %>%
     filter(Population >= 500000) %>%
     select(-Population)
 
+themeops <- theme(axis.line=element_blank(),
+                  axis.text.x=element_blank(),
+                  axis.title.x=element_blank(),
+                  axis.text.y=element_blank(), axis.ticks=element_blank(),
+                  axis.title.y=element_blank(), legend.direction="vertical",
+                  panel.grid=element_blank(),
+                  legend.position="bottom",
+                  legend.key = element_rect(colour = 'black',  size = .8, linetype='solid'),
+                  text=element_text(size=12),
+                  plot.title=element_text(hjust=.5, size=14))
+
+
 ##
 for (year in 1990:2016){
     date = as.Date(paste(year, '6-30', sep='-'))
     map.year = cshp(date, useGW=TRUE)
     ## ## how many of the World Bank countries can we match? about 165 (pretty good)
     ## sum(unique(wb.df$iso3c) %in% map.all@data$ISO1AL3)
-
     ## drop unnecessary variables from cshape data
     map.year@data <- map.year@data %>% select(CNTRY_NAME, ISO1AL3)
     map.year@data$ISO1AL3 <- as.character(map.year@data$ISO1AL3)
-
-    ## eliminate countries not in World Bank data
-    map.year@data <- map.year@data[map.year@data$ISO1AL3 %in% wb.df$ISO1AL3, ]
-
+    ## ## mask for countries not in World Bank data
+    ## mask_missing <- map.year@data$ISO1AL3 %in% wb.df$ISO1AL3
     wb.year <- wb.df[wb.df$year == year, ]
+    wb.year$GDPgrowth[wb.year$GDPgrowth > 5] <- 5
+    wb.year$GDPgrowth[wb.year$GDPgrowth < -5] <- -5
     ## merge the two
     ## map.year@data <- data.frame(map.year@data, wb.year[match(map.year@data$ISO1AL3, wb.year$ISO1AL3), ])
-    map.year@data <- join(map.year@data, wb.year)
-    ## map.year@data$id <- map.year$ISO1AL3
-    mapofyear <- fortify(map.year)
-    map <- join(mapofyear, map.year@data)
-
-    plot <- ggplot(map) + aes(long, lat, group=group, fill=GDPgrowth) +
-        geom_polygon() + geom_path(color='white')
+    map.year@data <- join(map.year@data, wb.year, by='ISO1AL3')
+    map.year@data$id <- map.year@data$ISO1AL3
+    mapofyear <- fortify(model=map.year, region = 'ISO1AL3')
+    map <- join(mapofyear, map.year@data, by='id')
+#
+    plot <- ggplot(map) + aes(long, lat, group=group, fill=GDPgrowth, frame=year) +
+        geom_polygon() + geom_path(color='white', lwd=.2) + coord_fixed(1.2) +
+        scale_fill_gradient2(midpoint=0,
+                             breaks=c(-4,0,4), labels=c("-4%", "0%", "4%")) +
+        guides(fill=guide_colorbar(title.position="top",
+                             direction = "horizontal",
+                             label.position = "bottom",
+                             title="GDP % Change")) +
+        themeops + ggtitle('Growth')
+    ggsave(filename = paste('Growth', year, sep='_'), device = 'png', width = 4, height = 3, dpi = 300)
 }
 ##
 
+gganimate(plot)
 
+gganimate(plot, "output.gif")
 
