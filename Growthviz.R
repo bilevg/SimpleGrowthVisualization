@@ -13,9 +13,11 @@ gpclibPermit()
 options(digits=8, max.print=1000, scipen=13)
 
 ## world bank indicator for gdp percent change annual
+start = 2011
+end = 2016
 
 ## ## get the GDPpc contant 2010$ and Population total indicators from Development Indicators
-wb.df = wb(indicator=c('NY.GDP.MKTP.KD.ZG', 'SP.POP.TOTL'), country='countries_only', start=1990, end=2016)
+wb.df = wb(indicator=c('NY.GDP.MKTP.KD.ZG', 'SP.POP.TOTL'), country='countries_only', start=start, end=end)
 
 wb.df = wb.df %>%
     select(country, date, iso3c, value, indicator) %>%
@@ -37,8 +39,10 @@ themeops <- theme(axis.line=element_blank(),
                   plot.title=element_text(hjust=.5, size=12))
 
 
+library(parallel)
 ##
-for (year in 1990:2016){
+mclapply(start:end, mc.cores = detectCores(),
+         mc.preschedule = TRUE, function(year){
     date = as.Date(paste(year, '6-30', sep='-'))
     map.year = cshp(date, useGW=TRUE)
     ## ## how many of the World Bank countries can we match? about 165 (pretty good)
@@ -67,11 +71,12 @@ for (year in 1990:2016){
                              label.position = "bottom",
                              title="GDP % Change")) +
         themeops + ggtitle('Growth')
-    ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 4, height = 3, dpi = 300)
-}
+    ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 5, height = 4, dpi = 300)
+})
+
 ##
 
-gganimate(plot)
+## gganimate(plot)
 
-gganimate(plot, "output.gif")
+## gganimate(plot, "output.gif")
 
