@@ -7,17 +7,18 @@ library(tripack)
 library(maptools)
 library(wbstats)
 library(ggplot2)
-library(gganimate)
+## library(gganimate)
 library(gpclib)
 gpclibPermit()
 options(digits=8, max.print=1000, scipen=13)
 
 ## world bank indicator for gdp percent change annual
-start = 2016
+start = 1961
 end = 2016
 
 ## ## get the GDPpc contant 2010$ and Population total indicators from Development Indicators
 wb.df = wb(indicator=c('NY.GDP.MKTP.KD.ZG', 'SP.POP.TOTL'), country='countries_only', start=start, end=end)
+
 
 wb.df = wb.df %>%
     select(country, date, iso3c, value, indicator) %>%
@@ -27,6 +28,31 @@ wb.df = wb.df %>%
     filter(Population >= 500000) %>%
     select(-Population)
 
+
+wb.world = wb(indicator=c('NY.GDP.MKTP.KD.ZG'), country='aggregates', start=start, end=end)
+wb.world = wb.world %>%
+    filter(country == 'World') %>%
+    select(country, date, value, indicator) %>%
+    spread(key = indicator, value=value) %>%
+    rename(year = date, GDPgrowth = 'GDP growth (annual %)')
+
+## get the colors right:
+x <- seq(0,1, length.out=5)
+colors <- c(seq_gradient_pal('red4', 'yellow')(x), seq_gradient_pal('yellow', 'green4')(x))
+colors <- unique(colors)
+colors[8] <- colors[9]; colors[2] <- colors[1]
+
+ggplot(wb.world, aes(x=year, y=GDPgrowth, group=country)) +
+    annotate('rect', ymin = c(-2:6), ymax = c(-1:7), xmin = -Inf, xmax = Inf,
+             fill=colors, alpha=.9) +
+    geom_line() + geom_point() +
+    scale_x_discrete(breaks = seq(1960, 2016, 5)) +
+    scale_y_continuous(breaks = seq(-2, 7)) +
+    theme_minimal()
+
+
+
+## options for map plot
 themeops <- theme(plot.background = element_rect(fill = 'white'),
                   panel.background = element_rect(fill = 'white'),
                   axis.line=element_blank(),
@@ -41,8 +67,9 @@ themeops <- theme(plot.background = element_rect(fill = 'white'),
                   plot.title=element_text(hjust=.5, size = 15))
 
 
-## library(parallel)
-##
+library(parallel)
+
+img <- image_graph(600, 340, res = 96)
 ## mclapply(start:end, mc.cores = detectCores(),
 ##          mc.preschedule = TRUE, function(year){
 for (year in start:end){
@@ -79,14 +106,18 @@ for (year in start:end){
         themeops + ggtitle('Annual Percent Change in GDP per capita')
     ## to get the correct dimensions, taking into account coord_fixed:
     ## (ylim[1] - ylim[2]) / (xlim[1] - xlim[2]) / coord_fixed = 2.224
-    ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 4 * 2.224,
-           height = 4,
-           dpi = 150)
+    ## ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 4 * 2.224,
+    ##        height = 4,
+    ##        dpi = 150)
+    print(plot)
 }
+## )
 
 ## try out magick package
 library(magick)
 
+animation <- image_animate(img, fps=2)
+image_write(animation, "growth.gif")
 ## gganimate(plot)
 
 ## gganimate(plot, "output.gif")
