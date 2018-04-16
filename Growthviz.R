@@ -20,6 +20,9 @@ options(digits=8, max.print=1000, scipen=13)
 start = 1961
 end = 2016
 
+####################################################################
+## Data Prep
+####################################################################
 ## ## get the GDPpc contant 2010$ and Population total indicators from Development Indicators
 wb.df = wb(indicator=c('NY.GDP.MKTP.KD.ZG', 'SP.POP.TOTL'), country='countries_only', start=start, end=end)
 
@@ -42,6 +45,10 @@ wb.world = wb.world %>%
     mutate(date = as.numeric(date)) %>%
     rename(GDPgrowth = 'GDP growth (annual %)')
 
+
+####################################################################
+## Plotting prep
+####################################################################
 ## color calculation for timeline plot with colored background
 ncolors = 6
 levels = 5
@@ -53,32 +60,36 @@ colors <- unique(colors)
 colors <- c(colors, rep(colors[length(colors)], 2))
 
 
-
-
-
 ## options for map plot
 themeops <- theme(plot.background = element_rect(fill = 'white'),
+                  plot.margin = margin(t = 0, r=0, b=-.3, l=-.2, unit='in'),
                   panel.background = element_rect(fill = 'white'),
                   axis.line=element_blank(),
                   axis.text.x=element_blank(),
                   axis.title.x=element_blank(),
-                  axis.text.y=element_blank(), axis.ticks=element_blank(),
-                  axis.title.y=element_blank(), legend.direction='vertical',
+                  axis.text.y=element_blank(),
+                  axis.ticks=element_blank(),
+                  axis.title.y=element_blank(),
+                  legend.direction='vertical',
                   panel.grid=element_blank(),
                   legend.position='right',
                   ## legend.key = element_rect(colour = 'black',  size = .2, linetype='solid')
-                  legend.key.height=unit(2.2,"line"),
+                  legend.key.height=unit(2,"line"),
+                  legend.margin=margin(t=0, r=0, b=0, l=-.4, unit='in'),
                   plot.title=element_text(hjust=.5, size = 15))
 
 
-## library(parallel)
-
+####################################################################
+## Plotting prep
+####################################################################
 img <- image_graph(800, 600, res = 96)
+quartz(width=7, height=5)
 ## mclapply(start:end, mc.cores = detectCores(),
 ##          mc.preschedule = TRUE, function(year){
 for (year in start:end){
     day = as.Date(paste(year, '6-30', sep='-'))
     map.year = cshp(day, useGW=TRUE)
+    map.year <- thinnedSpatialPoly(map.year, tolerance=.3, minarea=100)
     ## ## how many of the World Bank countries can we match? about 165 (pretty good)
     ## sum(unique(wb.df$iso3c) %in% map.all@data$ISO1AL3)
     ## drop unnecessary variables from cshape data
@@ -99,15 +110,17 @@ for (year in start:end){
     ##
     map <- ggplot(map.df) + aes(long, lat, group=group, fill=GDPgrowth) +
         geom_polygon() + geom_path(color='black', lwd=.1) +
-        coord_fixed(1.2) + xlim(-170, 185) + ylim(-55, 78) +
-        scale_fill_gradient2(mid = 'yellow', low='red4', high = 'green4',
+        coord_fixed(1.2) +
+        xlim(-170, 185) + ylim(-54, 78) +
+        scale_fill_gradient2(mid = 'yellow', low='red4',
+                             high = 'green4',
                              breaks=seq(-6,6,2), limits=c(-6, 6),
                              labels=
                                  paste(c(paste('\u2264',-6), seq(-4,4,2), paste('\u2265', 6)), '%', sep='')) +
         guides(fill=guide_colorbar(title.position="top",
                                    title = NULL,
                                    direction = "vertical")) +
-        themeops + ggtitle('Annual Percent Change in GDP per capita')
+        themeops + ggtitle('Annual Growth in GDPpc, by Country and Total')
     ## to get the correct dimensions, taking into account coord_fixed:
     ## (ylim[1] - ylim[2]) / (xlim[1] - xlim[2]) / coord_fixed = 2.224
     ## ggsave(filename = paste('Growth_', year, '.png', sep=''), device = 'png', width = 4 * 2.224,
@@ -123,7 +136,7 @@ for (year in start:end){
                  fill=colors) +
         geom_line() + geom_point() +
         scale_x_continuous(breaks = seq(1960, 2016, 5)) +
-        scale_y_continuous(limits=c(-2, 8), breaks=seq(-2, 6, 2),
+        scale_y_continuous(limits=c(-3, 8), breaks=seq(-2, 6, 2),
                            expand=c(0,0)) +
         expand_limits(x=2016) +
         theme_minimal() + theme(panel.grid.major = element_blank(),
@@ -131,9 +144,8 @@ for (year in start:end){
                                 axis.title.x=element_blank(),
                                 axis.title.y=element_blank())
     ## combine the two plots into one and print
-    ## grid.newpage()
     ## png(paste('Growth_', year, '.png', sep=''), width = 6, height = 4, units='in', res = 96)
-    grid.arrange(map, timeline, ncol=1, nrow=2, heights=c(.8,.2), padding=0)
+    grid.arrange(map, timeline, nrow=2, heights=c(2,1.2))
     ## map.v <- viewport(width = 1, height = .8, x = 0.5, y = 0.5)
     ## timeline.v <- viewport(width = 1, height = .2, x = 0.5, y = 0.15)
     ## save the file
@@ -147,7 +159,7 @@ for (year in start:end){
 ## try out magick package
 
 
-animation <- image_animate(image_morph(img,  frames=56*3), loop=1, fps=10)
+## animation <- image_animate(image_morph(img,  frames=56*3), loop=1, fps=10)
 ## animation <- image_animate(img, loop=1, fps = 1)
 ## image_write(animation, "growth.gif")
 ## gganimate(plot)
