@@ -26,6 +26,8 @@ end = 2016
 ## ## get the GDPpc contant 2010$ and Population total indicators from Development Indicators
 wb.df = wb(indicator=c('NY.GDP.MKTP.KD.ZG', 'SP.POP.TOTL'), country='countries_only', start=start, end=end)
 
+truncate_top <- function(x, top){ifelse(x > top, top, x)}
+truncate_bottom <- function(x, bottom){ifelse(x < bottom, bottom, x)}
 ## data for map plot
 wb.df = wb.df %>%
     select(country, date, iso3c, value, indicator) %>%
@@ -33,6 +35,8 @@ wb.df = wb.df %>%
     mutate(date = as.numeric(date)) %>%
     rename(Population = 'Population, total', ISO1AL3 = iso3c,
            GDPgrowth = 'GDP growth (annual %)') %>%
+    mutate(GDPgrowth = truncate_top(GDPgrowth, 6)) %>%
+    mutate(GDPgrowth = truncate_bottom(GDPgrowth, -6)) %>%
     filter(Population >= 500000) %>%
     select(-Population)
 
@@ -98,8 +102,8 @@ for (year in start:end){
     ## ## mask for countries not in World Bank data
     ## mask_missing <- map.year@data$ISO1AL3 %in% wb.df$ISO1AL3
     wb.year <- wb.df[wb.df$date == year, ]
-    wb.year$GDPgrowth[wb.year$GDPgrowth > 6] <- 6
-    wb.year$GDPgrowth[wb.year$GDPgrowth < -6] <- -6
+    ## wb.year$GDPgrowth[wb.year$GDPgrowth > 6] <- 6
+    ## wb.year$GDPgrowth[wb.year$GDPgrowth < -6] <- -6
     ## wb.year$GDPgrowth <- cut_interval(wb.year$GDPgrowth, 10)
     ## merge the two
     ## map.year@data <- data.frame(map.year@data, wb.year[match(map.year@data$ISO1AL3, wb.year$ISO1AL3), ])
@@ -168,3 +172,19 @@ for (year in start:end){
 
 
 
+## function to produce world map based on year, matching WB using ISO1AL3
+map_codes <- allmap$ISO1AL3[!is.na(allmap$ISO1AL3)]
+duplicates <- map_codes[duplicated(map_codes)]
+allmap$ISO1AL3[allmap$ISO1AL3 %in% duplicates]
+
+for(year in start:end){
+    wb.year <- wb.df[wb.df$date == year, ]
+    for(iso in map_codes) {
+        if(iso %in% duplicates) {
+            ## pick one based on dates
+            year
+        }
+        else
+            ## match the only one
+            }
+}
