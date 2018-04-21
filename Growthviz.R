@@ -45,7 +45,7 @@ wb.df = wb.df %>%
            GDPgrowth = 'GDP growth (annual %)') %>%
     mutate(GDPgrowth = truncate_top(GDPgrowth, maximum)) %>%
     mutate(GDPgrowth = truncate_bottom(GDPgrowth, -maximum)) %>%
-    filter(Population >= 500000) %>%
+    ## filter(Population >= 500000) %>%
     select(-Population)
 
 ## data for timeline plot
@@ -95,8 +95,8 @@ my_cshp <- function (date = NA)
                              cshp.full$GWEDAY, sep = '-'))
     cshp.part <- cshp.full[startdate <= date & enddate >=
                            date, ]
-    ## slightly thin (simplify) the polygons for faster and neater plotting
-    cshp.part <- thinnedSpatialPoly(cshp.part, tolerance=.1, minarea=100)
+    ## ## slightly thin (simplify) the polygons for faster and neater plotting
+    ## cshp.part <- thinnedSpatialPoly(cshp.part, tolerance=.1, minarea=100)
     cshp.part
 }
 
