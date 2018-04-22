@@ -14,3 +14,15 @@ Economic Growth (Annual % change in GDP) visualized on world map
 Colorblind friendly version:
 
 ![Alt text](/growth_colorblind.gif?raw=true "Color-blind friendly version")
+
+
+
+
+
+
+
+
+
+Grayscale version:
+
+![Alt text](/growth_grayscale.gif?raw=true "Color-blind friendly version")
