@@ -24,7 +24,10 @@ levels = 5
 ncolors = maximum
 increment = (1/levels)
 x <- seq(0,1, length.out= ncolors*levels + 1)
-colors <- c(seq_gradient_pal('red4', 'yellow')(x), seq_gradient_pal('yellow', 'green4')(x))
+topcolor <- 'red4'
+midcolor <- 'yellow'
+botcolor <- 'green4'
+colors <- c(seq_gradient_pal(botcolor, midcolor)(x), seq_gradient_pal(midcolor, botcolor)(x))
 colors <- unique(colors)
 
 ####################################################################
@@ -152,9 +155,9 @@ for (year in start:end){
         coord_fixed(1.2) +
         xlim(-170, 185) +
         ylim(-54, 78) +
-        scale_fill_gradient2(mid = 'yellow',
-                             low='red4',
-                             high = 'green4',
+        scale_fill_gradient2(mid = midcolor,
+                             low = botcolor,
+                             high = topcolor,
                              breaks= breaks,
                              limits=c(-maximum, maximum),
                              labels= labels) +
