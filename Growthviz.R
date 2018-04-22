@@ -61,7 +61,9 @@ wb.world = wb.world %>%
     mutate(GDPgrowth.trunc = truncate_top(GDPgrowth, maximum)) %>%
     mutate(GDPgrowth.trunc = truncate_bottom(GDPgrowth.trunc, -maximum)) %>%
     ## discretize growth values and turn into colors
-    mutate(col = colors[cut_interval(GDPgrowth.trunc, length(colors))])
+    mutate(col = colors[cut(GDPgrowth.trunc,
+                            breaks = seq(-maximum, maximum, length.out = length(GDPgrowth.trunc)),
+                            include.lowest=TRUE)])
 
 
 ####################################################################
