@@ -24,10 +24,10 @@ levels = 5
 ncolors = maximum
 increment = (1/levels)
 x <- seq(0,1, length.out= ncolors*levels + 1)
-topcolor <- 'red4'
+topcolor <- 'green4'
 midcolor <- 'yellow'
-botcolor <- 'green4'
-colors <- c(seq_gradient_pal(botcolor, midcolor)(x), seq_gradient_pal(midcolor, botcolor)(x))
+botcolor <- 'red4'
+colors <- c(seq_gradient_pal(botcolor, midcolor)(x), seq_gradient_pal(midcolor, topcolor)(x))
 colors <- unique(colors)
 
 ####################################################################
